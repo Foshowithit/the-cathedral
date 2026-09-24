@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cathedral — 150 Years of Stone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d0d0b;
+    --parch:#e9e2d2;
+    --parch-dim:#a89f8c;
+    --gold:#c9a227;
+    --rule:rgba(233,226,210,.22);
+    --serif:'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; background:#14140f; overflow:hidden; }
+  body{ font-family:var(--serif); color:var(--parch); -webkit-font-smoothing:antialiased; }
+  #scene{ position:fixed; inset:0; display:block; }
+
+  /* --- title --- */
+  #title{
+    position:fixed; top:18px; left:22px; z-index:5;
+    font-size:13px; letter-spacing:.42em; text-transform:uppercase;
+    color:var(--parch); opacity:.95; text-shadow:0 1px 3px rgba(20,16,8,.9), 0 0 14px rgba(20,16,8,.55);
+    pointer-events:none;
+  }
+  #title span{ display:block; margin-top:5px; font-size:11px; letter-spacing:.3em; color:var(--parch-dim); font-style:italic; text-transform:none; }
+
+  /* --- viewpoint buttons --- */
+  #views{
+    position:fixed; top:16px; right:20px; z-index:6;
+    display:flex; gap:8px;
+  }
+  .vbtn{
+    font-family:var(--serif); font-size:13px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--parch); background:rgba(13,13,11,.55); backdrop-filter:blur(6px);
+    border:1px solid var(--rule); padding:8px 14px; cursor:pointer;
+    transition:background .2s, border-color .2s, color .2s;
+  }
+  .vbtn:hover{ background:rgba(20,20,15,.8); border-color:var(--gold); color:#fff; }
+  .vbtn kbd{ font-family:inherit; color:var(--parch-dim); font-size:11px; margin-left:6px; }
+
+  /* --- bottom bar --- */
+  #bar{
+    position:fixed; left:0; right:0; bottom:0; z-index:6;
+    display:grid; grid-template-columns:265px 1fr 210px; gap:26px; align-items:center;
+    padding:14px 26px 16px;
+    background:linear-gradient(to top, rgba(10,10,8,.92), rgba(10,10,8,.72) 70%, rgba(10,10,8,0));
+  }
+  #phaseCol{ min-width:0; }
+  #year{
+    font-size:46px; line-height:.9; font-weight:600; letter-spacing:.04em;
+    font-variant-numeric:tabular-nums; text-shadow:0 2px 14px rgba(0,0,0,.7);
+  }
+  #phase{
+    margin-top:6px; font-size:13px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  #campaign{ font-size:12.5px; font-style:italic; color:var(--parch-dim); margin-top:2px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  #trackCol{ min-width:0; }
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:26px; background:transparent; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:3px; background:linear-gradient(to right, var(--gold) var(--fill,50%), rgba(233,226,210,.25) var(--fill,50%));
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:15px; height:15px; margin-top:-6px; border-radius:50%;
+    background:var(--gold); border:2px solid #14140f; box-shadow:0 0 0 1px rgba(233,226,210,.5), 0 2px 6px rgba(0,0,0,.6);
+  }
+  input[type=range]::-moz-range-track{ height:3px; background:rgba(233,226,210,.25); }
+  input[type=range]::-moz-range-progress{ height:3px; background:var(--gold); }
+  input[type=range]::-moz-range-thumb{ width:13px; height:13px; border-radius:50%; background:var(--gold); border:2px solid #14140f; }
+  #ticks{
+    display:flex; justify-content:space-between; font-size:11px; letter-spacing:.14em;
+    color:var(--parch-dim); margin-top:-2px; padding:0 2px; user-select:none;
+  }
+  #ticks span{ position:relative; }
+
+  #playCol{ display:flex; align-items:center; justify-content:flex-end; gap:14px; }
+  #play{
+    width:46px; height:46px; border-radius:50%; border:1px solid var(--rule);
+    background:rgba(13,13,11,.6); color:var(--parch); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:border-color .2s, background .2s;
+  }
+  #play:hover{ border-color:var(--gold); background:rgba(24,22,14,.85); }
+  #play svg{ width:16px; height:16px; fill:currentColor; }
+  #speeds{ display:flex; gap:4px; }
+  .sbtn{
+    font-family:var(--serif); font-size:12.5px; letter-spacing:.06em;
+    background:none; border:1px solid transparent; color:var(--parch-dim);
+    padding:5px 7px; cursor:pointer; transition:color .15s, border-color .15s;
+  }
+  .sbtn:hover{ color:var(--parch); }
+  .sbtn.on{ color:var(--gold); border-color:rgba(201,162,39,.5); }
+
+  #err{
+    position:fixed; inset:auto 12px 100px 12px; z-index:20; display:none;
+    background:#3a1010; color:#ffd9d9; border:1px solid #a33; padding:10px 14px;
+    font:13px/1.45 ui-monospace, monospace; white-space:pre-wrap; max-height:30vh; overflow:auto;
+  }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div id="title">The Cathedral — 150 Years of Stone<span>Anno Domini · France, MCCCCL</span></div>
+
+  <div id="views">
+    <button class="vbtn" id="btnHero" title="Return to the composed view (R)">View <kbd>R</kbd></button>
+    <button class="vbtn" id="btnGround" title="Inspect the masonry at human scale">Masonry <kbd>M</kbd></button>
+  </div>
+
+  <div id="bar">
+    <div id="phaseCol">
+      <div id="year">1275</div>
+      <div id="phase">The Nave &amp; West Front Begin</div>
+      <div id="campaign">Stone is rising westward from the completed choir.</div>
+    </div>
+    <div id="trackCol">
+      <input id="tl" type="range" min="1200" max="1350" step="0.25" value="1275">
+      <div id="ticks">
+        <span>1200</span><span>1225</span><span>1250</span><span>1275</span><span>1300</span><span>1325</span><span>1350</span>
+      </div>
+    </div>
+    <div id="playCol">
+      <div id="speeds">
+        <button class="sbtn" data-sp="2">½×</button>
+        <button class="sbtn on" data-sp="4">1×</button>
+        <button class="sbtn" data-sp="8">2×</button>
+        <button class="sbtn" data-sp="16">4×</button>
+      </div>
+      <button id="play" title="Play / pause (Space)">
+        <svg id="icoPlay" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg>
+        <svg id="icoPause" viewBox="0 0 16 16" style="display:none"><path d="M3 2h3.4v12H3zM9.6 2H13v12H9.6z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="err"></div>
+
+  <script>
+    window.__err = function(msg){
+      var e = document.getElementById('err');
+      e.style.display = 'block';
+      e.textContent += msg + '\n';
+    };
+    window.addEventListener('error', function(ev){
+      window.__err('Error: ' + (ev.message || ev.type) + (ev.filename ? '\n  ' + ev.filename + ':' + ev.lineno : ''));
+    });
+    window.addEventListener('unhandledrejection', function(ev){
+      window.__err('Rejection: ' + (ev.reason && ev.reason.stack ? ev.reason.stack : ev.reason));
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+          onerror="window.__err('Failed to load Three.js r128 from cdnjs — check network.')"></script>
+  <script src="js/util.js"></script>
+  <script src="js/textures.js"></script>
+  <script src="js/cathedral.js"></script>
+  <script src="js/site.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
