@@ -4,7 +4,7 @@ A real-time, fully explorable reconstruction of one French Gothic cathedral bein
 
 **Live:** https://foshowithit.github.io/the-cathedral/
 
-<video src="demo.mp4" controls="controls" style="max-width:100%;" muted playsinline></video>
+[Watch the 39-second recorded tour](https://foshowithit.github.io/the-cathedral/demo.mp4)
 
 ## Walkthrough
 
